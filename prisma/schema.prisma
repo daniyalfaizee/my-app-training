@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["jsonProtocol"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+  shadowDatabaseUrl = env("POSTGRES_URL_NON_POOLING")
+}
+model Item {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  name      String?   @unique
+  price     Int
+  orders    SalesOrder[]
+  invoices  CashSale[]
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  email     String   @unique
+  name      String?
+  phone     String   @unique
+  orders    SalesOrder[]
+  invoices  CashSale[]
+}
+
+model SalesOrder {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  orderNum    Int?
+  amount    Int?
+  tax       Int?
+  shipping  Int?
+  products  Item[]
+  shopper   Customer?    @relation(fields: [shopperId], references: [id])
+  shopperId Int?   @unique
+  // invoice   CashSale?    @relation(fields: [invoiceId], references: [id])
+  invoiceId Int?   @unique
+}
+
+model CashSale {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  invoiceNum  Int?
+  amount    Int?
+  products  Item[]
+  shopper   Customer?    @relation(fields: [shopperId], references: [id])
+  shopperId Int?   @unique
+  // order     SalesOrder?    @relation(fields: [orderId], references: [id])
+  orderId   Int?   @unique
+}
+
+model SalesOrderOnItems {
+  // order     SalesOrder?    @relation(fields: [orderId], references: [id])
+  orderId   Int   @unique
+
+  // product   Item?    @relation(fields: [productId], references: [id])
+  productId Int   @unique
+
+  @@id([orderId, productId])
+}
+
+model CashSaleOnItems {
+  // invoice   CashSale?    @relation(fields: [invoiceId], references: [id])
+  invoiceId Int   @unique
+
+  // product   Item?    @relation(fields: [productId], references: [id])
+  productId Int   @unique
+
+  @@id([invoiceId, productId])
+}
